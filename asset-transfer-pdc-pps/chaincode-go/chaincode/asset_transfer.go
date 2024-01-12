@@ -30,14 +30,14 @@ type Asset struct {
 	Name    string `json:"vehicleName"` //Name is used to distinguish the various types of objects in state database
 	RegNum  string `json:"vehicleNumber"`
 	Company string `json:"vehicleCompany"`
-	MfgYear int    `json:"size"`
+	MfgYear int    `json:"vehicleMfgYear"`
 	Owner   string `json:"owner"`
 }
 
 // AssetPrivateDetails describes details that are private to owners
 type AssetPrivateDetails struct {
-	RegNum         string `json:"vehicleNumber"`
-	AppraisedValue int    `json:"appraisedValue"`
+	RegNum string `json:"vehicleNumber"`
+	Life   int    `json:"vehicleLife"`
 }
 
 // TransferAgreement describes the buyer agreement returned by ReadTransferAgreement
@@ -75,11 +75,11 @@ func (s *SmartContract) CreateAsset(ctx contractapi.TransactionContextInterface)
 	}
 
 	type assetTransientInput struct {
-		Name           string `json:"vehicleName"` //Name is used to distinguish the various types of objects in state database
-		RegNum         string `json:"vehicleNumber"`
-		Company        string `json:"vehicleCompany"`
-		MfgYear        int    `json:"size"`
-		AppraisedValue int    `json:"appraisedValue"`
+		Name    string `json:"vehicleName"` //Name is used to distinguish the various types of objects in state database
+		RegNum  string `json:"vehicleNumber"`
+		Company string `json:"vehicleCompany"`
+		MfgYear int    `json:"vehicleMfgYear"`
+		Life    int    `json:"vehicleLife"`
 	}
 
 	var assetInput assetTransientInput
@@ -98,10 +98,10 @@ func (s *SmartContract) CreateAsset(ctx contractapi.TransactionContextInterface)
 		return fmt.Errorf("vehicleCompany field must be a non-empty string")
 	}
 	if assetInput.MfgYear <= 0 {
-		return fmt.Errorf("size field must be a positive integer")
+		return fmt.Errorf("vehicleMfgYear field must be a positive integer")
 	}
-	if assetInput.AppraisedValue <= 0 {
-		return fmt.Errorf("appraisedValue field must be a positive integer")
+	if assetInput.Life <= 0 {
+		return fmt.Errorf("vehicleLife field must be a positive integer")
 	}
 
 	// Check if asset already exists
@@ -152,8 +152,8 @@ func (s *SmartContract) CreateAsset(ctx contractapi.TransactionContextInterface)
 
 	// Save asset details to collection visible to owning organization
 	assetPrivateDetails := AssetPrivateDetails{
-		RegNum:         assetInput.RegNum,
-		AppraisedValue: assetInput.AppraisedValue,
+		RegNum: assetInput.RegNum,
+		Life:   assetInput.Life,
 	}
 
 	assetPrivateDetailsAsBytes, err := json.Marshal(assetPrivateDetails) // marshal asset details to JSON
@@ -211,8 +211,8 @@ func (s *SmartContract) AgreeToTransfer(ctx contractapi.TransactionContextInterf
 	if len(valueJSON.RegNum) == 0 {
 		return fmt.Errorf("assetID field must be a non-empty string")
 	}
-	if valueJSON.AppraisedValue <= 0 {
-		return fmt.Errorf("appraisedValue field must be a positive integer")
+	if valueJSON.Life <= 0 {
+		return fmt.Errorf("vehicleLife field must be a positive integer")
 	}
 
 	// Read asset from the private data collection

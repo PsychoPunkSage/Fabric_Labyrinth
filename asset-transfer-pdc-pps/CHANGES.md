@@ -9,10 +9,10 @@ Vehicle Lifetime Management::>
 + ID::>       Vehicle number      === RegNum
 + Color::>    Vehicle Company     === Company
 + Size::>     Vehicle Year of Reg === MfgYear
-Owner::>    Vehicle Owner       === Owner
++ Owner::>    Vehicle Owner       === Owner
 
-ID::>       Vehicle number      === RegNum
-AppraisedValue::> Vehicle Life  === Life
++ ID::>       Vehicle number      === RegNum
++ AppraisedValue::> Vehicle Life  === Life
 
 
 
