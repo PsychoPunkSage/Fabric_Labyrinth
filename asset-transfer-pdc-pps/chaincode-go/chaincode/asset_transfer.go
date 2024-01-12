@@ -30,7 +30,7 @@ type Asset struct {
 	Name    string `json:"vehicleName"` //Name is used to distinguish the various types of objects in state database
 	RegNum  string `json:"vehicleNumber"`
 	Company string `json:"vehicleCompany"`
-	Size    int    `json:"size"`
+	MfgYear int    `json:"size"`
 	Owner   string `json:"owner"`
 }
 
@@ -78,7 +78,7 @@ func (s *SmartContract) CreateAsset(ctx contractapi.TransactionContextInterface)
 		Name           string `json:"vehicleName"` //Name is used to distinguish the various types of objects in state database
 		RegNum         string `json:"vehicleNumber"`
 		Company        string `json:"vehicleCompany"`
-		Size           int    `json:"size"`
+		MfgYear        int    `json:"size"`
 		AppraisedValue int    `json:"appraisedValue"`
 	}
 
@@ -97,7 +97,7 @@ func (s *SmartContract) CreateAsset(ctx contractapi.TransactionContextInterface)
 	if len(assetInput.Company) == 0 {
 		return fmt.Errorf("vehicleCompany field must be a non-empty string")
 	}
-	if assetInput.Size <= 0 {
+	if assetInput.MfgYear <= 0 {
 		return fmt.Errorf("size field must be a positive integer")
 	}
 	if assetInput.AppraisedValue <= 0 {
@@ -132,7 +132,7 @@ func (s *SmartContract) CreateAsset(ctx contractapi.TransactionContextInterface)
 		Name:    assetInput.Name,
 		RegNum:  assetInput.RegNum,
 		Company: assetInput.Company,
-		Size:    assetInput.Size,
+		MfgYear: assetInput.MfgYear,
 		Owner:   clientID,
 	}
 	assetJSONasBytes, err := json.Marshal(asset)

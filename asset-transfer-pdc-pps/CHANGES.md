@@ -7,8 +7,8 @@
 Vehicle Lifetime Management::>
 + Type::>     Vehicle Name        === Name   
 + ID::>       Vehicle number      === RegNum
-Color::>    Vehicle Company     === Company
-Size::>     Vehicle Year of Reg === MfgYear
++ Color::>    Vehicle Company     === Company
++ Size::>     Vehicle Year of Reg === MfgYear
 Owner::>    Vehicle Owner       === Owner
 
 ID::>       Vehicle number      === RegNum
