@@ -27,11 +27,11 @@ type SmartContract struct {
 
 // Asset describes main asset details that are visible to all organizations
 type Asset struct {
-	Name   string `json:"vehicleName"` //Name is used to distinguish the various types of objects in state database
-	RegNum string `json:"vehicleNumber"`
-	Color  string `json:"color"`
-	Size   int    `json:"size"`
-	Owner  string `json:"owner"`
+	Name    string `json:"vehicleName"` //Name is used to distinguish the various types of objects in state database
+	RegNum  string `json:"vehicleNumber"`
+	Company string `json:"vehicleCompany"`
+	Size    int    `json:"size"`
+	Owner   string `json:"owner"`
 }
 
 // AssetPrivateDetails describes details that are private to owners
@@ -76,8 +76,8 @@ func (s *SmartContract) CreateAsset(ctx contractapi.TransactionContextInterface)
 
 	type assetTransientInput struct {
 		Name           string `json:"vehicleName"` //Name is used to distinguish the various types of objects in state database
-		RegNum         string `json:"vehicleNUmber"`
-		Color          string `json:"color"`
+		RegNum         string `json:"vehicleNumber"`
+		Company        string `json:"vehicleCompany"`
 		Size           int    `json:"size"`
 		AppraisedValue int    `json:"appraisedValue"`
 	}
@@ -92,10 +92,10 @@ func (s *SmartContract) CreateAsset(ctx contractapi.TransactionContextInterface)
 		return fmt.Errorf("vehicleName field must be a non-empty string")
 	}
 	if len(assetInput.RegNum) == 0 {
-		return fmt.Errorf("vehicleNUmber field must be a non-empty string")
+		return fmt.Errorf("vehicleNumber field must be a non-empty string")
 	}
-	if len(assetInput.Color) == 0 {
-		return fmt.Errorf("color field must be a non-empty string")
+	if len(assetInput.Company) == 0 {
+		return fmt.Errorf("vehicleCompany field must be a non-empty string")
 	}
 	if assetInput.Size <= 0 {
 		return fmt.Errorf("size field must be a positive integer")
@@ -129,11 +129,11 @@ func (s *SmartContract) CreateAsset(ctx contractapi.TransactionContextInterface)
 
 	// Make submitting client the owner
 	asset := Asset{
-		Name:   assetInput.Name,
-		RegNum: assetInput.RegNum,
-		Color:  assetInput.Color,
-		Size:   assetInput.Size,
-		Owner:  clientID,
+		Name:    assetInput.Name,
+		RegNum:  assetInput.RegNum,
+		Company: assetInput.Company,
+		Size:    assetInput.Size,
+		Owner:   clientID,
 	}
 	assetJSONasBytes, err := json.Marshal(asset)
 	if err != nil {
