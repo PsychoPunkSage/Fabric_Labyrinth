@@ -33,11 +33,11 @@ func TestReadAsset(t *testing.T) {
 	require.EqualError(t, err, "failed to read asset: unable to retrieve asset")
 
 	testAsset := &chaincode.Asset{
-		ID:    "id1",
-		Type:  "testfulasset",
-		Color: "gray",
-		Size:  7,
-		Owner: myOrg1Clientid,
+		RegNum:  "id1",
+		Name:    "testfulasset",
+		Company: "gray",
+		MfgYear: 7,
+		Owner:   myOrg1Clientid,
 	}
 	setReturnPrivateDataInStub(t, chaincodeStub, testAsset)
 	assetRead, err := assetTransferCC.ReadAsset(transactionContext, "id1")
@@ -59,8 +59,8 @@ func TestReadAssetPrivateDetails(t *testing.T) {
 	require.EqualError(t, err, "failed to read asset details: collection not found")
 
 	returnPrivData := &chaincode.AssetPrivateDetails{
-		ID:             "id1",
-		AppraisedValue: 5,
+		RegNum: "id1",
+		Life:   5,
 	}
 	setReturnAssetPrivateDetailsInStub(t, chaincodeStub, returnPrivData)
 	assetRead, err := assetTransferCC.ReadAssetPrivateDetails(transactionContext, myOrg1PrivCollection, "id1")
@@ -79,7 +79,7 @@ func TestReadTransferAgreement(t *testing.T) {
 
 	chaincodeStub.GetPrivateDataReturns([]byte(myOrg2Clientid), nil)
 	expectedData := &chaincode.TransferAgreement{
-		ID:      "id1",
+		RegNum:  "id1",
 		BuyerID: myOrg2Clientid,
 	}
 	dataRead, err := assetTransferCC.ReadTransferAgreement(transactionContext, "id1")
@@ -90,7 +90,7 @@ func TestReadTransferAgreement(t *testing.T) {
 func TestQueryAssetByOwner(t *testing.T) {
 	transactionContext, chaincodeStub := prepMocksAsOrg1()
 
-	asset := &chaincode.Asset{Type: "valuableasset", ID: "asset1", Owner: "user1"}
+	asset := &chaincode.Asset{Name: "valuableasset", RegNum: "asset1", Owner: "user1"}
 	asset1Bytes, err := json.Marshal(asset)
 	require.NoError(t, err)
 
@@ -133,7 +133,7 @@ func TestQueryAssets(t *testing.T) {
 	require.EqualError(t, err, "failed retrieving next item")
 	require.Nil(t, assets)
 
-	asset := &chaincode.Asset{Type: "valuableasset", ID: "asset1", Owner: "user1"}
+	asset := &chaincode.Asset{Name: "valuableasset", RegNum: "asset1", Owner: "user1"}
 	asset1Bytes, err := json.Marshal(asset)
 	require.NoError(t, err)
 
@@ -168,7 +168,7 @@ func TestGetAssetByRange(t *testing.T) {
 	require.EqualError(t, err, "failed retrieving next item")
 	require.Nil(t, assets)
 
-	asset := &chaincode.Asset{Type: "valuableasset", ID: "asset1", Owner: "user1"}
+	asset := &chaincode.Asset{Name: "valuableasset", RegNum: "asset1", Owner: "user1"}
 	asset1Bytes, err := json.Marshal(asset)
 	require.NoError(t, err)
 
