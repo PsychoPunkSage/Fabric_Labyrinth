@@ -15,17 +15,17 @@ import (
 )
 
 // ReadAsset reads the information from collection
-func (s *SmartContract) ReadAsset(ctx contractapi.TransactionContextInterface, assetID string) (*Asset, error) {
+func (s *SmartContract) ReadAsset(ctx contractapi.TransactionContextInterface, vehicleNumber string) (*Asset, error) {
 
-	log.Printf("ReadAsset: collection %v, ID %v", assetCollection, assetID)
-	assetJSON, err := ctx.GetStub().GetPrivateData(assetCollection, assetID) //get the asset from chaincode state
+	log.Printf("ReadAsset: collection %v, RegNum %v", assetCollection, vehicleNumber)
+	assetJSON, err := ctx.GetStub().GetPrivateData(assetCollection, vehicleNumber) //get the asset from chaincode state
 	if err != nil {
 		return nil, fmt.Errorf("failed to read asset: %v", err)
 	}
 
 	// No Asset found, return empty response
 	if assetJSON == nil {
-		log.Printf("%v does not exist in collection %v", assetID, assetCollection)
+		log.Printf("%v does not exist in collection %v", vehicleNumber, assetCollection)
 		return nil, nil
 	}
 
@@ -40,14 +40,14 @@ func (s *SmartContract) ReadAsset(ctx contractapi.TransactionContextInterface, a
 }
 
 // ReadAssetPrivateDetails reads the asset private details in organization specific collection
-func (s *SmartContract) ReadAssetPrivateDetails(ctx contractapi.TransactionContextInterface, collection string, assetID string) (*AssetPrivateDetails, error) {
-	log.Printf("ReadAssetPrivateDetails: collection %v, ID %v", collection, assetID)
-	assetDetailsJSON, err := ctx.GetStub().GetPrivateData(collection, assetID) // Get the asset from chaincode state
+func (s *SmartContract) ReadAssetPrivateDetails(ctx contractapi.TransactionContextInterface, collection string, vehicleNumber string) (*AssetPrivateDetails, error) {
+	log.Printf("ReadAssetPrivateDetails: collection %v, RegNum %v", collection, vehicleNumber)
+	assetDetailsJSON, err := ctx.GetStub().GetPrivateData(collection, vehicleNumber) // Get the asset from chaincode state
 	if err != nil {
 		return nil, fmt.Errorf("failed to read asset details: %v", err)
 	}
 	if assetDetailsJSON == nil {
-		log.Printf("AssetPrivateDetails for %v does not exist in collection %v", assetID, collection)
+		log.Printf("AssetPrivateDetails for %v does not exist in collection %v", vehicleNumber, collection)
 		return nil, nil
 	}
 
@@ -61,10 +61,10 @@ func (s *SmartContract) ReadAssetPrivateDetails(ctx contractapi.TransactionConte
 }
 
 // ReadTransferAgreement gets the buyer's identity from the transfer agreement from collection
-func (s *SmartContract) ReadTransferAgreement(ctx contractapi.TransactionContextInterface, assetID string) (*TransferAgreement, error) {
-	log.Printf("ReadTransferAgreement: collection %v, ID %v", assetCollection, assetID)
+func (s *SmartContract) ReadTransferAgreement(ctx contractapi.TransactionContextInterface, vehicleNumber string) (*TransferAgreement, error) {
+	log.Printf("ReadTransferAgreement: collection %v, RegNum %v", assetCollection, vehicleNumber)
 	// composite key for TransferAgreement of this asset
-	transferAgreeKey, err := ctx.GetStub().CreateCompositeKey(transferAgreementObjectType, []string{assetID})
+	transferAgreeKey, err := ctx.GetStub().CreateCompositeKey(transferAgreementObjectType, []string{vehicleNumber})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create composite key: %v", err)
 	}
@@ -74,11 +74,11 @@ func (s *SmartContract) ReadTransferAgreement(ctx contractapi.TransactionContext
 		return nil, fmt.Errorf("failed to read TransferAgreement: %v", err)
 	}
 	if buyerIdentity == nil {
-		log.Printf("TransferAgreement for %v does not exist", assetID)
+		log.Printf("TransferAgreement for %v does not exist", vehicleNumber)
 		return nil, nil
 	}
 	agreement := &TransferAgreement{
-		ID:      assetID,
+		RegNum:  vehicleNumber,
 		BuyerID: string(buyerIdentity),
 	}
 	return agreement, nil

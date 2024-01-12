@@ -209,7 +209,7 @@ func (s *SmartContract) AgreeToTransfer(ctx contractapi.TransactionContextInterf
 
 	// Do some error checking since we get the chance
 	if len(valueJSON.RegNum) == 0 {
-		return fmt.Errorf("assetID field must be a non-empty string")
+		return fmt.Errorf("vehicleNumber field must be a non-empty string")
 	}
 	if valueJSON.Life <= 0 {
 		return fmt.Errorf("vehicleLife field must be a positive integer")
@@ -285,7 +285,7 @@ func (s *SmartContract) TransferAsset(ctx contractapi.TransactionContextInterfac
 	}
 
 	if len(assetTransferInput.RegNum) == 0 {
-		return fmt.Errorf("assetID field must be a non-empty string")
+		return fmt.Errorf("vehicleNumber field must be a non-empty string")
 	}
 	if len(assetTransferInput.BuyerMSP) == 0 {
 		return fmt.Errorf("buyerMSP field must be a non-empty string")
@@ -438,7 +438,7 @@ func (s *SmartContract) DeleteAsset(ctx contractapi.TransactionContextInterface)
 	}
 
 	if len(assetDeleteInput.RegNum) == 0 {
-		return fmt.Errorf("assetID field must be a non-empty string")
+		return fmt.Errorf("vehicleNumber field must be a non-empty string")
 	}
 
 	// Verify that the client is submitting request to peer in their organization
@@ -512,7 +512,7 @@ func (s *SmartContract) PurgeAsset(ctx contractapi.TransactionContextInterface) 
 	}
 
 	if len(assetPurgeInput.RegNum) == 0 {
-		return fmt.Errorf("assetID field must be a non-empty string")
+		return fmt.Errorf("vehicleNumber field must be a non-empty string")
 	}
 
 	// Verify that the client is submitting request to peer in their organization
