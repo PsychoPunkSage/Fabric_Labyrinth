@@ -6,10 +6,10 @@ SPDX-License-Identifier: Apache-2.0
 package chaincode_test
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"os"
 	"testing"
-	"encoding/base64"
 
 	"github.com/hyperledger/fabric-chaincode-go/pkg/cid"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
@@ -57,15 +57,15 @@ const myOrg2Clientid = "myOrg2Userid"
 const myOrg2PrivCollection = "Org2TestmspPrivateCollection"
 
 type assetTransientInput struct {
-	Type           string `json:"objectType"`
-	ID             string `json:"assetID"`
-	Color          string `json:"color"`
-	Size           int    `json:"size"`
-	AppraisedValue int    `json:"appraisedValue"`
+	Name    string `json:"vehicleName"`
+	RegNum  string `json:"vehicleNumber"`
+	Company string `json:"vehicleCompany"`
+	MfgYear int    `json:"vehicleMfgYear"`
+	Life    int    `json:"vehicleLife"`
 }
 
 type assetTransferTransientInput struct {
-	ID       string `json:"assetID"`
+	RegNum   string `json:"vehicleNumber"`
 	BuyerMSP string `json:"buyerMSP"`
 }
 
@@ -87,27 +87,27 @@ func TestCreateAssetBadInput(t *testing.T) {
 	require.Contains(t, err.Error(), "failed to unmarshal JSON")
 
 	testAsset := &assetTransientInput{
-		Type: "testfulasset",
+		Name: "testfulasset",
 	}
 	setReturnAssetPropsInTransientMap(t, chaincodeStub, testAsset)
 	err = assetTransferCC.CreateAsset(transactionContext)
-	require.EqualError(t, err, "assetID field must be a non-empty string")
+	require.EqualError(t, err, "vehicleNumber field must be a non-empty string")
 
 	testAsset = &assetTransientInput{
-		ID:    "id1",
-		Color: "gray",
+		RegNum:  "id1",
+		Company: "gray",
 	}
 	setReturnAssetPropsInTransientMap(t, chaincodeStub, testAsset)
 	err = assetTransferCC.CreateAsset(transactionContext)
-	require.EqualError(t, err, "objectType field must be a non-empty string")
+	require.EqualError(t, err, "vehicleName field must be a non-empty string")
 
 	// case when asset exists, GetPrivateData returns a valid data from ledger
 	testAsset = &assetTransientInput{
-		ID:             "id1",
-		Type:           "testfulasset",
-		Color:          "gray",
-		Size:           7,
-		AppraisedValue: 500,
+		RegNum:  "id1",
+		Name:    "testfulasset",
+		Company: "gray",
+		MfgYear: 7,
+		Life:    500,
 	}
 	setReturnAssetPropsInTransientMap(t, chaincodeStub, testAsset)
 	chaincodeStub.GetPrivateDataReturns([]byte{}, nil)
@@ -119,11 +119,11 @@ func TestCreateAssetSuccessful(t *testing.T) {
 	transactionContext, chaincodeStub := prepMocksAsOrg1()
 	assetTransferCC := chaincode.SmartContract{}
 	testAsset := &assetTransientInput{
-		ID:             "id1",
-		Type:           "testfulasset",
-		Color:          "gray",
-		Size:           7,
-		AppraisedValue: 500,
+		RegNum:  "id1",
+		Name:    "testfulasset",
+		Company: "gray",
+		MfgYear: 7,
+		Life:    500,
 	}
 	setReturnAssetPropsInTransientMap(t, chaincodeStub, testAsset)
 	err := assetTransferCC.CreateAsset(transactionContext)
@@ -134,8 +134,8 @@ func TestCreateAssetSuccessful(t *testing.T) {
 	require.Equal(t, "id1", calledId)
 
 	expectedPrivateDetails := &chaincode.AssetPrivateDetails{
-		ID:             "id1",
-		AppraisedValue: 500,
+		RegNum: "id1",
+		Life:   500,
 	}
 	assetBytes, err := json.Marshal(expectedPrivateDetails)
 	calledCollection, calledId, calledAssetBytes := chaincodeStub.PutPrivateDataArgsForCall(1)
@@ -149,33 +149,33 @@ func TestAgreeToTransferBadInput(t *testing.T) {
 	assetTransferCC := chaincode.SmartContract{}
 
 	assetPrivDetail := &chaincode.AssetPrivateDetails{
-		ID: "id1",
-		// no AppraisedValue
+		RegNum: "id1",
+		// no Life
 	}
 	setReturnAssetPrivateDetailsInTransientMap(t, chaincodeStub, assetPrivDetail)
 	origAsset := chaincode.Asset{
-		ID:    "id1",
-		Type:  "testfulasset",
-		Color: "gray",
-		Size:  7,
-		Owner: myOrg1Clientid,
+		RegNum:  "id1",
+		Name:    "testfulasset",
+		Company: "gray",
+		MfgYear: 7,
+		Owner:   myOrg1Clientid,
 	}
 	setReturnPrivateDataInStub(t, chaincodeStub, &origAsset)
 
 	err := assetTransferCC.AgreeToTransfer(transactionContext)
-	require.EqualError(t, err, "appraisedValue field must be a positive integer")
+	require.EqualError(t, err, "vehicleLife field must be a positive integer")
 
 	assetPrivDetail = &chaincode.AssetPrivateDetails{
-		// no ID
-		AppraisedValue: 500,
+		// no RegNum
+		Life: 500,
 	}
 	setReturnAssetPrivateDetailsInTransientMap(t, chaincodeStub, assetPrivDetail)
 	err = assetTransferCC.AgreeToTransfer(transactionContext)
-	require.EqualError(t, err, "assetID field must be a non-empty string")
+	require.EqualError(t, err, "vehicleNumber field must be a non-empty string")
 
 	assetPrivDetail = &chaincode.AssetPrivateDetails{
-		ID:             "id1",
-		AppraisedValue: 500,
+		RegNum: "id1",
+		Life:   500,
 	}
 	setReturnAssetPrivateDetailsInTransientMap(t, chaincodeStub, assetPrivDetail)
 	// asset does not exist
@@ -188,16 +188,16 @@ func TestAgreeToTransferSuccessful(t *testing.T) {
 	transactionContext, chaincodeStub := prepMocksAsOrg1()
 	assetTransferCC := chaincode.SmartContract{}
 	assetPrivDetail := &chaincode.AssetPrivateDetails{
-		ID:             "id1",
-		AppraisedValue: 500,
+		RegNum: "id1",
+		Life:   500,
 	}
 	setReturnAssetPrivateDetailsInTransientMap(t, chaincodeStub, assetPrivDetail)
 	origAsset := chaincode.Asset{
-		ID:    "id1",
-		Type:  "testfulasset",
-		Color: "gray",
-		Size:  7,
-		Owner: myOrg1Clientid,
+		RegNum:  "id1",
+		Name:    "testfulasset",
+		Company: "gray",
+		MfgYear: 7,
+		Owner:   myOrg1Clientid,
 	}
 	setReturnPrivateDataInStub(t, chaincodeStub, &origAsset)
 	chaincodeStub.CreateCompositeKeyReturns(transferAgreementObjectType+"id1", nil)
@@ -220,7 +220,7 @@ func TestTransferAssetBadInput(t *testing.T) {
 	assetTransferCC := chaincode.SmartContract{}
 
 	assetNewOwner := &assetTransferTransientInput{
-		ID:       "id1",
+		RegNum:   "id1",
 		BuyerMSP: "",
 	}
 	setReturnAssetOwnerInTransientMap(t, chaincodeStub, assetNewOwner)
@@ -229,7 +229,7 @@ func TestTransferAssetBadInput(t *testing.T) {
 	require.EqualError(t, err, "buyerMSP field must be a non-empty string")
 
 	assetNewOwner = &assetTransferTransientInput{
-		ID:       "id1",
+		RegNum:   "id1",
 		BuyerMSP: myOrg2Msp,
 	}
 	setReturnAssetOwnerInTransientMap(t, chaincodeStub, assetNewOwner)
@@ -243,21 +243,21 @@ func TestTransferAssetSuccessful(t *testing.T) {
 	transactionContext, chaincodeStub := prepMocksAsOrg1()
 	assetTransferCC := chaincode.SmartContract{}
 	assetNewOwner := &assetTransferTransientInput{
-		ID:       "id1",
+		RegNum:   "id1",
 		BuyerMSP: myOrg2Msp,
 	}
 	setReturnAssetOwnerInTransientMap(t, chaincodeStub, assetNewOwner)
 	origAsset := chaincode.Asset{
-		ID:    "id1",
-		Type:  "testfulasset",
-		Color: "gray",
-		Size:  7,
-		Owner: myOrg1Clientid,
+		RegNum:  "id1",
+		Name:    "testfulasset",
+		Company: "gray",
+		MfgYear: 7,
+		Owner:   myOrg1Clientid,
 	}
 	setReturnPrivateDataInStub(t, chaincodeStub, &origAsset)
 	// to ensure we pass data hash verification
 	chaincodeStub.GetPrivateDataHashReturns([]byte("datahash"), nil)
-	// to ensure that ReadTransferAgreement call returns org2 client ID
+	// to ensure that ReadTransferAgreement call returns org2 client RegNum
 	chaincodeStub.GetPrivateDataReturnsOnCall(1, []byte(myOrg2Clientid), nil)
 	chaincodeStub.CreateCompositeKeyReturns(transferAgreementObjectType+"id1", nil)
 
@@ -286,17 +286,17 @@ func TestTransferAssetByNonOwner(t *testing.T) {
 	transactionContext, chaincodeStub := prepMocksAsOrg1()
 	assetTransferCC := chaincode.SmartContract{}
 	assetNewOwner := &assetTransferTransientInput{
-		ID:       "id1",
+		RegNum:   "id1",
 		BuyerMSP: myOrg1Msp,
 	}
 	setReturnAssetOwnerInTransientMap(t, chaincodeStub, assetNewOwner)
 	// Try to transfer asset owned by Org2
 	org2Asset := chaincode.Asset{
-		ID:    "id1",
-		Type:  "testfulasset",
-		Color: "gray",
-		Size:  7,
-		Owner: myOrg2Clientid,
+		RegNum:  "id1",
+		Name:    "testfulasset",
+		Company: "gray",
+		MfgYear: 7,
+		Owner:   myOrg2Clientid,
 	}
 	setReturnPrivateDataInStub(t, chaincodeStub, &org2Asset)
 	err := assetTransferCC.TransferAsset(transactionContext)
@@ -307,22 +307,22 @@ func TestTransferAssetWithoutAnAgreement(t *testing.T) {
 	transactionContext, chaincodeStub := prepMocksAsOrg1()
 	assetTransferCC := chaincode.SmartContract{}
 	assetNewOwner := &assetTransferTransientInput{
-		ID:       "id1",
+		RegNum:   "id1",
 		BuyerMSP: myOrg1Msp,
 	}
 	setReturnAssetOwnerInTransientMap(t, chaincodeStub, assetNewOwner)
 	orgAsset := chaincode.Asset{
-		ID:    "id1",
-		Type:  "testfulasset",
-		Color: "gray",
-		Size:  7,
-		Owner: myOrg1Clientid,
+		RegNum:  "id1",
+		Name:    "testfulasset",
+		Company: "gray",
+		MfgYear: 7,
+		Owner:   myOrg1Clientid,
 	}
 	setReturnPrivateDataInStub(t, chaincodeStub, &orgAsset)
 	// to ensure we pass data hash verification
 	chaincodeStub.GetPrivateDataHashReturns([]byte("datahash"), nil)
 	chaincodeStub.CreateCompositeKeyReturns(transferAgreementObjectType+"id1", nil)
-	// ReadTransferAgreement call returns no buyer client ID
+	// ReadTransferAgreement call returns no buyer client RegNum
 	chaincodeStub.GetPrivateDataReturnsOnCall(1, []byte{}, nil)
 
 	err := assetTransferCC.TransferAsset(transactionContext)
@@ -333,17 +333,17 @@ func TestTransferAssetNonMatchingAppraisalValue(t *testing.T) {
 	transactionContext, chaincodeStub := prepMocksAsOrg1()
 	assetTransferCC := chaincode.SmartContract{}
 	assetNewOwner := &assetTransferTransientInput{
-		ID:       "id1",
+		RegNum:   "id1",
 		BuyerMSP: myOrg2Msp,
 	}
 	setReturnAssetOwnerInTransientMap(t, chaincodeStub, assetNewOwner)
 
 	orgAsset := chaincode.Asset{
-		ID:    "id1",
-		Type:  "testfulasset",
-		Color: "gray",
-		Size:  7,
-		Owner: myOrg1Clientid,
+		RegNum:  "id1",
+		Name:    "testfulasset",
+		Company: "gray",
+		MfgYear: 7,
+		Owner:   myOrg1Clientid,
 	}
 	setReturnPrivateDataInStub(t, chaincodeStub, &orgAsset)
 	chaincodeStub.CreateCompositeKeyReturns(transferAgreementObjectType+"id1", nil)
@@ -370,7 +370,7 @@ func prepMocks(orgMSP, clientId string) (*mocks.TransactionContext, *mocks.Chain
 	clientIdentity := &mocks.ClientIdentity{}
 	clientIdentity.GetMSPIDReturns(orgMSP, nil)
 	clientIdentity.GetIDReturns(base64.StdEncoding.EncodeToString([]byte(clientId)), nil)
-	// set matching msp ID using peer shim env variable
+	// set matching msp RegNum using peer shim env variable
 	os.Setenv("CORE_PEER_LOCALMSPID", orgMSP)
 	transactionContext.GetClientIdentityReturns(clientIdentity)
 	return transactionContext, chaincodeStub
